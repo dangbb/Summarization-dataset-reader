@@ -73,8 +73,16 @@ def tokenize(paragraph):
   sents = sent_tokenize(paragraph)
   return [word_tokenize(sent, format="text") for sent in sents]
 
-def load_vlsp(is_test, partial):
-  path = './dataset/vlsp/vlsp_2022_abmusu_train_data_new.jsonl'
+def load_vlsp(type, partial):
+  if type == 'train':
+    path = './dataset/vlsp/vlsp_2022_abmusu_train_data_new.jsonl'
+    is_test = False
+  elif type == 'valid':
+    path = './dataset/vlsp/vlsp_2022_abmusu_validation_data_new.jsonl'
+    is_test = False
+  elif type == 'test':
+    path = './dataset/vlsp/vlsp_abmusu_test_data.jsonl'
+    is_test = True
 
   dataset = Dataset(is_test)
 
@@ -93,7 +101,11 @@ def load_vlsp(is_test, partial):
 
       json_dto = json.loads(cluster)
 
-      summary = tokenize(json_dto['summary'])
+      if not is_test:
+        summary = tokenize(json_dto['summary'])
+      else:
+        summary = []
+        
       new_cluster = Cluster(summary, json_dto['category'])
 
       for document in json_dto['single_documents']:
@@ -116,6 +128,6 @@ def load_vlsp(is_test, partial):
   return dataset 
 
 if __name__ == '__main__':
-  dataset = load_vlsp(False, True)
+  dataset = load_vlsp('test', True)
 
   dataset.show()
