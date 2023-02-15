@@ -69,6 +69,10 @@ class Paragraph:
     print(' '.join(self.sentences))
 
 
+def tokenize(paragraph):
+  sents = sent_tokenize(paragraph)
+  return [word_tokenize(sent, format="text") for sent in sents]
+
 def load_vlsp(path, is_test, partial):
   dataset = Dataset(is_test)
 
@@ -82,20 +86,23 @@ def load_vlsp(path, is_test, partial):
 
     for idx, cluster in tqdm(enumerate(json_list)):
       if partial:
-        if idx > 2:
+        if idx > 1:
           break 
 
       json_dto = json.loads(cluster)
 
-      new_cluster = Cluster(json_dto['summary'], json_dto['category'])
+      summary = tokenize(json_dto['summary'])
+      new_cluster = Cluster(summary, json_dto['category'])
 
       for document in json_dto['single_documents']:
-        new_document = Document(document['title'], document['anchor_text'])
+        title = tokenize(document['title'])
+        anchor_text = tokenize(document['anchor_text'])
+
+        new_document = Document(title, anchor_text)
 
         raw_text = document['raw_text']
         for paragraph in raw_text.split('\n'):
-          sents = sent_tokenize(paragraph)
-          sents = [word_tokenize(sent, format="text") for sent in sents]
+          sents = tokenize(paragraph)
 
           paragraph = Paragraph(sents)
           new_document.add_paragraph(paragraph)
