@@ -73,7 +73,9 @@ def tokenize(paragraph):
   sents = sent_tokenize(paragraph)
   return [word_tokenize(sent, format="text") for sent in sents]
 
-def load_vlsp(path, is_test, partial):
+def load_vlsp(is_test, partial):
+  path = './dataset/vlsp/vlsp_2022_abmusu_train_data_new.jsonl'
+
   dataset = Dataset(is_test)
 
   with open(path, 'r') as json_file:
@@ -113,10 +115,7 @@ def load_vlsp(path, is_test, partial):
 
   return dataset 
 
-
 if __name__ == '__main__':
-  dataset = load_vlsp(
-    './dataset/vlsp/vlsp_2022_abmusu_train_data_new.jsonl', 
-    False, True)
+  dataset = load_vlsp(False, True)
 
   dataset.show()
