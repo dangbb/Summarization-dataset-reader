@@ -1,4 +1,5 @@
-from tqdm.notebook import tqdm 
+from tqdm import tqdm 
+from underthesea import sent_tokenize, word_tokenize
 
 import json
 
@@ -7,8 +8,13 @@ class Dataset:
     self.is_test = is_test 
     self.clusters = []
 
-  def add_cluster(cluster):
+  def add_cluster(self, cluster):
     self.clusters.append(cluster)
+
+  def show(self):
+    for i, cluster in enumerate(self.clusters):
+      print("Cluster {}".format(i))
+      cluster.show()
 
 
 class Cluster:
@@ -21,19 +27,46 @@ class Cluster:
     self.documents.append(doc)
 
   def get_all_sents(self):
-    sents = []
-    for doc in self.documents:
-      sents = sents + doc.get_all_sents()
+    return [document.get_all_sents() for document in self.documents]
 
-    return sents 
+  def show(self):
+    print("Category: ", self.category)
+    print("Summary: ", self.summary)
+    for i, document in enumerate(self.documents):
+      print("Document {}".format(i))
+      document.show()
 
 
 class Document:
-  def __init__(self, sentences):
-    self.sentences = sentences
+  def __init__(self, title, anchor_text):
+    self.title = title 
+    self.anchor_text = anchor_text 
+    self.paragraphs = []
+
+  def add_paragraph(self, paragraph):
+    self.paragraphs.append(paragraph)
 
   def get_all_sents(self):
-    return self.sentences 
+    return [paragraph.get_all_sents() for paragraph in self.paragraphs]
+
+  def show(self):
+    print("Title: ", self.title)
+    print("Anchor text: ", self.anchor_text)
+    for paragraph in self.paragraphs:
+      print('[')
+      paragraph.show()
+      print(']')
+
+
+class Paragraph:
+  def __init__(self, sentences):
+    self.sentences = sentences 
+
+  def get_all_sents(self):
+    return self.sentences
+
+  def show(self):
+    print(' '.join(self.sentences))
 
 
 def load_vlsp(path, is_test, partial):
@@ -47,16 +80,36 @@ def load_vlsp(path, is_test, partial):
     print(json_dto.keys())
     print(json_dto['single_documents'][0].keys())
 
-    for cluster in json_list[0]:
-      json_dto = json.load(cluster)
+    for idx, cluster in tqdm(enumerate(json_list)):
+      if partial:
+        if idx > 2:
+          break 
 
-      cluster = Cluster()
+      json_dto = json.loads(cluster)
+
+      new_cluster = Cluster(json_dto['summary'], json_dto['category'])
 
       for document in json_dto['single_documents']:
-        pass
+        new_document = Document(document['title'], document['anchor_text'])
+
+        raw_text = document['raw_text']
+        for paragraph in raw_text.split('\n'):
+          sents = sent_tokenize(paragraph)
+          sents = [word_tokenize(sent, format="text") for sent in sents]
+
+          paragraph = Paragraph(sents)
+          new_document.add_paragraph(paragraph)
+
+        new_cluster.add_document(new_document)
+
+      dataset.add_cluster(new_cluster)
+
+  return dataset 
 
 
 if __name__ == '__main__':
-  load_vlsp(
+  dataset = load_vlsp(
     './dataset/vlsp/vlsp_2022_abmusu_train_data_new.jsonl', 
     False, True)
+
+  dataset.show()
