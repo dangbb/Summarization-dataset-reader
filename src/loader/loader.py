@@ -17,7 +17,7 @@ class Dataset:
       print("Cluster {}".format(i))
       cluster.show()
 
-  def evaluate_dataset(self):
+  def evaluate_dataset(self, visualize):
     print("Total number of clusters: ", len(self.clusters))
     
     array_summary_token = [] 
@@ -84,9 +84,27 @@ class Dataset:
     print("Average number of paragraph: ", np.mean(array_paragraph))
     print("Average number of sentence: ", np.mean(array_sentences))
     print("Average number of token: ", np.mean(array_token))
-        
+    
+    if visualize:
+      bins = 50 
+      self.visualize(array_summary_token, bins, "Number of token in summary")
+      self.visualize(array_summary_sents, bins, "Number of sents in summary")
+      self.visualize(array_token_compression_rate, bins, "Token compression rate")
+      self.visualize(array_sents_compression_rate, bins, "Sents compression rate")
+      self.visualize(array_avg_sents_per_paragraph, bins, "Average sentence per paragraph")
+      self.visualize(array_avg_sents_per_document, bins, "Average sentence per document")
+      self.visualize(array_document, bins, "Number of document")
+      self.visualize(array_paragraph, bins, "Number of paragraph")
+      self.visualize(array_sentences, bins, "Number of sentence")
+      self.visualize(array_token, bins, "Number of token")
+
     return array_summary_token, array_summary_sents, array_token_compression_rate, array_sents_compression_rate, array_avg_sents_per_paragraph, array_avg_sents_per_document, array_document, array_paragraph, array_sentences, array_token
- 
+
+  def visualize(self, metrics, bins, name):
+    plt.hist(metrics, bins, ec="yellow", fc="green", alpha=0.5)
+    plt.title(name)
+    plt.show()
+
 
 
 class Cluster:
