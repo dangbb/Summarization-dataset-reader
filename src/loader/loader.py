@@ -2,6 +2,7 @@ from tqdm import tqdm
 from underthesea import sent_tokenize, word_tokenize
 
 import json
+import numpy as np 
 
 class Dataset:
   def __init__(self, is_test: bool):
@@ -15,6 +16,77 @@ class Dataset:
     for i, cluster in enumerate(self.clusters):
       print("Cluster {}".format(i))
       cluster.show()
+
+  def evaluate_dataset(self):
+    print("Total number of clusters: ", len(self.clusters))
+    
+    array_summary_token = [] 
+    array_summary_sents = []
+    array_token_compression_rate = []
+    array_sents_compression_rate = [] 
+    array_avg_sents_per_paragraph = []
+    array_avg_sents_per_document = []
+    array_document = []
+    array_paragraph = []
+    array_sentences = []
+    array_token = [] 
+    
+    for cluster in tqdm(self.clusters):
+        
+        total_token_cluster = 0
+        total_sents_cluster = 0
+        total_paragraphs = 0
+        
+        for document in cluster.documents:
+            
+            total_tokens_doc = 0
+            total_sents_doc = 0
+            
+            for paragraph in document.paragraphs:
+                
+                total_tokens = 0
+                total_sents_paragraph = len(paragraph.sentences)
+                
+                for sentence in paragraph.sentences:
+                    total_tokens += len(sentence.split(' '))
+                    
+                total_tokens_doc += total_tokens 
+                total_sents_doc += total_sents_paragraph
+                
+            total_token_cluster += total_tokens_doc
+            total_sents_cluster += total_sents_doc
+            total_paragraphs += len(document.paragraphs)
+            
+        total_token_summary = 0
+        total_sents_summary = len(cluster.summary)
+        
+        for sent in cluster.summary:
+            total_token_summary += len(sent.split(' '))
+        
+        array_summary_token.append(total_token_summary)
+        array_summary_sents.append(total_sents_summary)
+        array_token_compression_rate.append(total_token_summary / total_token_cluster)
+        array_sents_compression_rate.append(total_sents_summary / total_sents_cluster)
+        array_avg_sents_per_paragraph.append(total_sents_cluster / total_paragraphs)
+        array_avg_sents_per_document.append(total_sents_cluster / len(cluster.documents))
+        array_document.append(len(cluster.documents))
+        array_paragraph.append(total_paragraphs)
+        array_sentences.append(total_sents_cluster)
+        array_token.append(total_token_cluster)
+        
+    print("Average number of token in summary: ", np.mean(array_summary_token))
+    print("Average number of sents in summary: ", np.mean(array_summary_sents))
+    print("Average compression rate (total token summary/total token cluster): ", np.mean(array_token_compression_rate))
+    print("Average compression rate (total sents summary/total sents cluster): ", np.mean(array_sents_compression_rate))
+    print("Average sentence per paragraph (total sents cluster/total paragraphs): ", np.mean(array_avg_sents_per_paragraph))
+    print("Average sentence per document (total sents cluster/total document): ", np.mean(array_avg_sents_per_document))
+    print("Average number of document: ", np.mean(array_document))
+    print("Average number of paragraph: ", np.mean(array_paragraph))
+    print("Average number of sentence: ", np.mean(array_sentences))
+    print("Average number of token: ", np.mean(array_token))
+        
+    return array_summary_token, array_summary_sents, array_token_compression_rate, array_sents_compression_rate, array_avg_sents_per_paragraph, array_avg_sents_per_document, array_document, array_paragraph, array_sentences, array_token
+ 
 
 
 class Cluster:
@@ -128,6 +200,6 @@ def load_vlsp(type, partial):
   return dataset 
 
 if __name__ == '__main__':
-  dataset = load_vlsp('test', True)
+  dataset = load_vlsp('test', False)
 
-  dataset.show()
+  dataset.evaluate_dataset()
