@@ -3,6 +3,7 @@ from underthesea import sent_tokenize, word_tokenize
 
 import json
 import numpy as np 
+import matplotlib.pyplot as plt
 
 class Dataset:
   def __init__(self, is_test: bool):
