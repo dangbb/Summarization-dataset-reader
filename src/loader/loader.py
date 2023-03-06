@@ -1,6 +1,8 @@
 from tqdm import tqdm 
 from underthesea import sent_tokenize, word_tokenize
 
+import os 
+
 import json
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -109,7 +111,8 @@ class Dataset:
 
 
 class Cluster:
-  def __init__(self, summary, category):
+  def __init__(self, summary, category, discrete=False):
+    self.discrete = False
     self.category = category 
     self.summary = summary 
     self.documents = []
@@ -218,7 +221,84 @@ def load_vlsp(type, partial):
 
   return dataset 
 
-if __name__ == '__main__':
-  dataset = load_vlsp('test', False)
+def load_vims(partial):
+  dataset = Dataset(False)
 
+  n_cluster = 300 
+
+  path = "dataset/ViMs"
+
+  # loading original data
+  original_data_path = os.path.join(path, "original")
+  for i in range(1, n_cluster + 1):
+    if i == 3 and partial:
+      break 
+
+    folder_name = "Cluster_{:02d}".format(i)
+
+    clusters = [] 
+
+    list_summary_dir = os.listdir(os.path.join(path, "summary", folder_name))
+    for dir in list_summary_dir:
+      with open(os.path.join(path, "summary", folder_name, dir), "r", encoding="utf-8") as f:
+        content = f.readlines()
+        content = [sent.strip() for sent in content if sent.strip() != ""]
+        cluster.append(Cluster(tokenize(' '.join(content))), "xx") 
+
+
+    list_summary_dir = os.listdir(os.path.join(path, "s3_summary", folder_name))
+    for dir in list_summary_dir:
+      summaries = []
+
+      with open(os.path.join(path, "s3_summary", folder_name, dir), "r", encoding="utf-8") as f:
+        content = f.readlines()
+        content = [sent.strip() for sent in content if sent.strip() != ""]
+        for sent in content:
+          if sent.strip() == "":
+            continue 
+          label = sent.split('\t')[0]
+          summary = sent.split('\t')[1]
+
+          if label == "1":
+            summaries.append(summary)
+
+      cluster.append(tokenize(Cluster(' '.join(summaries))), "xx", True)
+
+
+    list_original_dir = os.listdir(os.path.join(path, "original", folder_name, "original"))
+    for dir in listdir:
+      with open(os.path.join(path, "original", folder_name, "original", dir), "r", encoding="utf-8") as f:
+        content = f.readlines()
+        content = [sent.strip() for sent in content if sent.strip() != ""]
+        
+        title = ""
+        summary = ""
+        content = ""
+        
+        for line in content:
+          if line.startwith("Title: "):
+            title = line[7:]
+            continue 
+          if line.startwith("Summary: "):
+            summary = line[9: ]
+            continue 
+          if line.startwith("Content:"):
+            content = ""
+            continue 
+          
+          content = content + line 
+
+        document = Document(title, summary) 
+        document.add_paragraph(tokenize(content))
+        for i in range(len(clusters)):
+          clusters[i].add_document(document)
+    
+    for cluster in clusters:
+      dataset.add_cluster(cluster)
+
+  return dataset 
+  
+
+if __name__ == '__main__':
+  dataset = load_vims(False)
   dataset.evaluate_dataset()
