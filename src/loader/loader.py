@@ -299,6 +299,55 @@ def load_vims(partial):
   return dataset 
   
 
+def load_vnmds(partial):
+  path = "dataset/vietnameseMSD"
+
+  dataset = Dataset(False)
+
+  n_cluster = 200
+  for i in range(1, n_cluster):
+    cluster_folder_name = "cluster_{}".format(i)
+
+    filedir = oslistdir(os.path.join(path, cluster_folder_name))
+    cluster_number = []
+    clusters = []
+    # loading cluster 
+    with open(os.path.join(path, cluster_folder_name, "{}.ref1.tok.txt"), "r", encoding="utf-8") as f:
+      content = f.readlines()
+      content = [sent.strip() for sent in content if sent.strip() != ""]
+      cluster = Cluster(' '.join(content), "xx")
+      clusters.append(cluster)
+
+    with open(os.path.join(path, cluster_folder_name, "{}.ref2.tok.txt"), "r", encoding="utf-8") as f:
+      content = f.readlines()
+      content = [sent.strip() for sent in content if sent.strip() != ""]
+      cluster = Cluster(' '.join(content), "xx")
+      clusters.append(cluster)
+    
+    # loading document 
+
+    for dir in filedir:
+      number = dir.split('.')
+      if not number[0].startwith("cluster"):
+        cluster_number.append(cluster_number)
+
+    for number in cluster_number:
+      filename = os.path.join(path, cluster_folder_name, "{}.body.tok.txt".format(number))
+
+      with open(filename, "r", encoding="utf-8") as f:
+        content = f.readlines()
+        paragraph = Paragraph(content)
+        document = Document("", "")
+        document.add_paragraph(paragraph)
+        cluster.add_document(document)
+    
+    dataset.add_cluster(cluster)
+
+  return dataset 
+        
+
+
+
 if __name__ == '__main__':
   dataset = load_vims(False)
   dataset.evaluate_dataset()
