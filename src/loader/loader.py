@@ -230,7 +230,7 @@ def load_vims(partial):
 
   # loading original data
   original_data_path = os.path.join(path, "original")
-  for i in range(1, n_cluster + 1):
+  for i in tqdm(range(1, n_cluster + 1)):
     if i == 3 and partial:
       break 
 
@@ -305,7 +305,10 @@ def load_vnmds(partial):
   dataset = Dataset(False)
 
   n_cluster = 200
-  for i in range(1, n_cluster):
+  for i in tqdm(range(1, n_cluster)):
+    if i == 3 and partial:
+      break 
+      
     cluster_folder_name = "cluster_{}".format(i)
 
     filedir = oslistdir(os.path.join(path, cluster_folder_name))
