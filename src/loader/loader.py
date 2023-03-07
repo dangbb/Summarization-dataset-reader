@@ -226,7 +226,7 @@ def load_vims(partial):
 
   n_cluster = 300 
 
-  path = "dataset/ViMs"
+  path = "./dataset/ViMs"
 
   # loading original data
   original_data_path = os.path.join(path, "original")
@@ -234,62 +234,69 @@ def load_vims(partial):
     if i == 3 and partial:
       break 
 
-    folder_name = "Cluster_{:02d}".format(i)
+    folder_name = "Cluster_{:03d}".format(i)
 
     clusters = [] 
 
     list_summary_dir = os.listdir(os.path.join(path, "summary", folder_name))
+
     for dir in list_summary_dir:
+      if dir == ".DS_Store":
+        continue 
+
       with open(os.path.join(path, "summary", folder_name, dir), "r", encoding="utf-8") as f:
         content = f.readlines()
         content = [sent.strip() for sent in content if sent.strip() != ""]
-        cluster.append(Cluster(tokenize(' '.join(content))), "xx") 
+        clusters.append(Cluster(tokenize(' '.join(content)), "xx"))
 
 
-    list_summary_dir = os.listdir(os.path.join(path, "s3_summary", folder_name))
+    list_summary_dir = os.listdir(os.path.join(path, "S3_summary", folder_name))
     for dir in list_summary_dir:
       summaries = []
 
-      with open(os.path.join(path, "s3_summary", folder_name, dir), "r", encoding="utf-8") as f:
+      with open(os.path.join(path, "S3_summary", folder_name, dir), "r", encoding="utf-8") as f:
         content = f.readlines()
         content = [sent.strip() for sent in content if sent.strip() != ""]
         for sent in content:
           if sent.strip() == "":
             continue 
+          if len(sent.split('\t')) <= 1:
+            continue 
+
           label = sent.split('\t')[0]
           summary = sent.split('\t')[1]
 
           if label == "1":
             summaries.append(summary)
 
-      cluster.append(tokenize(Cluster(' '.join(summaries))), "xx", True)
+      clusters.append(Cluster(tokenize(' '.join(summaries)), "xx", True))
 
 
     list_original_dir = os.listdir(os.path.join(path, "original", folder_name, "original"))
-    for dir in listdir:
+    for dir in list_original_dir:
       with open(os.path.join(path, "original", folder_name, "original", dir), "r", encoding="utf-8") as f:
-        content = f.readlines()
-        content = [sent.strip() for sent in content if sent.strip() != ""]
+        lines = f.readlines()
+        lines = [sent.strip() for sent in lines if sent.strip() != ""]
         
         title = ""
         summary = ""
         content = ""
         
-        for line in content:
-          if line.startwith("Title: "):
+        for line in lines:
+          if line.startswith("Title: "):
             title = line[7:]
             continue 
-          if line.startwith("Summary: "):
+          if line.startswith("Summary: "):
             summary = line[9: ]
             continue 
-          if line.startwith("Content:"):
+          if line.startswith("Content:"):
             content = ""
             continue 
           
-          content = content + line 
+          content = content + line.strip()
 
         document = Document(title, summary) 
-        document.add_paragraph(tokenize(content))
+        document.add_paragraph(Paragraph(tokenize(content)))
         for i in range(len(clusters)):
           clusters[i].add_document(document)
     
@@ -300,7 +307,7 @@ def load_vims(partial):
   
 
 def load_vnmds(partial):
-  path = "dataset/vietnameseMSD"
+  path = "./dataset/vietnameseMSD"
 
   dataset = Dataset(False)
 
@@ -331,7 +338,7 @@ def load_vnmds(partial):
 
     for dir in filedir:
       number = dir.split('.')
-      if not number[0].startwith("cluster"):
+      if not number[0].startswith("cluster"):
         cluster_number.append(cluster_number)
 
     for number in cluster_number:
@@ -352,5 +359,6 @@ def load_vnmds(partial):
 
 
 if __name__ == '__main__':
-  dataset = load_vims(False)
-  dataset.evaluate_dataset()
+  dataset = load_vims(True)
+
+  dataset.show()
