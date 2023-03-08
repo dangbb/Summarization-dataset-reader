@@ -295,7 +295,7 @@ def load_vims(partial):
           
           content = content + line.strip()
 
-        document = Document(title, summary) 
+        document = Document(tokenize(title), tokenize(summary))
         document.add_paragraph(Paragraph(tokenize(content)))
         for i in range(len(clusters)):
           clusters[i].add_document(document)
@@ -318,47 +318,59 @@ def load_vnmds(partial):
       
     cluster_folder_name = "cluster_{}".format(i)
 
-    filedir = oslistdir(os.path.join(path, cluster_folder_name))
+    filedir = os.listdir(os.path.join(path, "clusters", cluster_folder_name))
     cluster_number = []
     clusters = []
     # loading cluster 
-    with open(os.path.join(path, cluster_folder_name, "{}.ref1.tok.txt"), "r", encoding="utf-8") as f:
+    with open(os.path.join(path, "clusters", cluster_folder_name, "cluster_{}.ref1.tok.txt".format(i)), "r", encoding="utf-8") as f:
       content = f.readlines()
       content = [sent.strip() for sent in content if sent.strip() != ""]
       cluster = Cluster(' '.join(content), "xx")
       clusters.append(cluster)
 
-    with open(os.path.join(path, cluster_folder_name, "{}.ref2.tok.txt"), "r", encoding="utf-8") as f:
+    with open(os.path.join(path, "clusters", cluster_folder_name, "cluster_{}.ref2.tok.txt".format(i)), "r", encoding="utf-8") as f:
       content = f.readlines()
       content = [sent.strip() for sent in content if sent.strip() != ""]
       cluster = Cluster(' '.join(content), "xx")
       clusters.append(cluster)
     
     # loading document 
-
     for dir in filedir:
-      number = dir.split('.')
-      if not number[0].startswith("cluster"):
-        cluster_number.append(cluster_number)
+      numbers = dir.split('.')
+      if not numbers[0].startswith("cluster"):
+        cluster_number.append(numbers[0])
 
     for number in cluster_number:
-      filename = os.path.join(path, cluster_folder_name, "{}.body.tok.txt".format(number))
+      filename = os.path.join(path, "clusters", cluster_folder_name, "{}.body.tok.txt".format(number))
 
       with open(filename, "r", encoding="utf-8") as f:
         content = f.readlines()
-        paragraph = Paragraph(content)
-        document = Document("", "")
-        document.add_paragraph(paragraph)
-        cluster.add_document(document)
+
+      filename = os.path.join(path, "clusters", cluster_folder_name, "{}.info.txt".format(number))
+
+      title = ""
+      anchor_text = ""
+      with open(filename, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+        
+        for line in lines:
+          if line.startswith("TITLE: "):
+            title = line[7:]
+          if line.startswith("SUMMARY: "):
+            anchor_text = line[9:]
+
+      paragraph = Paragraph(tokenize(' '.join(content).replace('_', ' ')))
+      document = Document(tokenize(title.replace('_', ' ')), tokenize(anchor_text.replace('_', ' ')))
+      document.add_paragraph(paragraph)
+      for i in range(len(clusters)):
+        clusters[i].add_document(document)
     
     dataset.add_cluster(cluster)
 
   return dataset 
-        
-
 
 
 if __name__ == '__main__':
-  dataset = load_vims(True)
+  dataset = load_vlsp("train", True)
 
   dataset.show()
