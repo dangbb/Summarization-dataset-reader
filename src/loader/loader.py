@@ -238,6 +238,9 @@ def load_vims(partial):
 
     clusters = [] 
 
+    if not os.path.exists(os.path.join(path, "summary", folder_name)):
+      continue 
+
     list_summary_dir = os.listdir(os.path.join(path, "summary", folder_name))
 
     for dir in list_summary_dir:
@@ -318,6 +321,9 @@ def load_vnmds(partial):
       
     cluster_folder_name = "cluster_{}".format(i)
 
+    if not os.path.exists(os.path.join(path, "clusters", cluster_folder_name)):
+      continue 
+
     filedir = os.listdir(os.path.join(path, "clusters", cluster_folder_name))
     cluster_number = []
     clusters = []
@@ -371,6 +377,6 @@ def load_vnmds(partial):
 
 
 if __name__ == '__main__':
-  dataset = load_vnmds(True)
+  dataset = load_vims(False)
 
   dataset.evaluate_dataset(False)
