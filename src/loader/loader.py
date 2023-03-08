@@ -373,4 +373,4 @@ def load_vnmds(partial):
 if __name__ == '__main__':
   dataset = load_vnmds(True)
 
-  dataset.show()
+  dataset.evaluate_dataset(False)
