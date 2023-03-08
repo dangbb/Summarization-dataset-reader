@@ -325,13 +325,13 @@ def load_vnmds(partial):
     with open(os.path.join(path, "clusters", cluster_folder_name, "cluster_{}.ref1.tok.txt".format(i)), "r", encoding="utf-8") as f:
       content = f.readlines()
       content = [sent.strip() for sent in content if sent.strip() != ""]
-      cluster = Cluster(' '.join(content), "xx")
+      cluster = Cluster(tokenize(' '.join(content)), "xx")
       clusters.append(cluster)
 
     with open(os.path.join(path, "clusters", cluster_folder_name, "cluster_{}.ref2.tok.txt".format(i)), "r", encoding="utf-8") as f:
       content = f.readlines()
       content = [sent.strip() for sent in content if sent.strip() != ""]
-      cluster = Cluster(' '.join(content), "xx")
+      cluster = Cluster(tokenize(' '.join(content)), "xx")
       clusters.append(cluster)
     
     # loading document 
@@ -371,6 +371,6 @@ def load_vnmds(partial):
 
 
 if __name__ == '__main__':
-  dataset = load_vlsp("train", True)
+  dataset = load_vnmds(True)
 
   dataset.show()
